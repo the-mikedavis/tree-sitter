@@ -469,6 +469,9 @@ fn run() -> Result<()> {
                 if let Some(highlight_config) = language_config.highlight_config(language)? {
                     let source = fs::read(path)?;
                     if html_mode {
+                        if !quiet {
+                            println!("<p>{}</p>\n", path.display());
+                        }
                         highlight::html(
                             &loader,
                             &theme_config.theme,

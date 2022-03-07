@@ -15,6 +15,7 @@ node_modules
 docs/assets/js/tree-sitter.js
 
 /target
+/result
 *.rs.bk
 *.a
 *.dylib

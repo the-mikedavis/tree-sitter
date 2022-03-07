@@ -76,3 +76,7 @@ ctor = "0.1"
 
 [build-dependencies]
 toml = "0.5"
+
+[package.metadata.nix]
+build = true
+app = true

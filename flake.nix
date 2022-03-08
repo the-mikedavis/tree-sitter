@@ -23,26 +23,28 @@
       root = ./.;
       renameOutputs = { "tree-sitter-cli" = "tree-sitter"; };
       crateOverrides = common: _: rec {
-        tree-sitter-cli = prev: {
-          buildInputs = (prev.buildInputs or [ ])
-            ++ (lib.optionals stdenv.isDarwin
-              [ pkgs.darwin.apple_sdk.frameworks.Security ]);
+        tree-sitter-cli = prev:
+          let inherit (common) pkgs lib stdenv;
+          in {
+            buildInputs = (prev.buildInputs or [ ])
+              ++ (lib.optionals stdenv.isDarwin
+                [ pkgs.darwin.apple_sdk.frameworks.Security ]);
 
-          # need emscripten to build tree-sitter.wasm
-          nativeBuildInputs = (prev.nativeBuildInputs or [ ])
-            ++ [ pkgs.which pkgs.emscripten ];
+            # need emscripten to build tree-sitter.wasm
+            nativeBuildInputs = (prev.nativeBuildInputs or [ ])
+              ++ [ pkgs.which pkgs.emscripten ];
 
-          # build tree-sitter.wasm for the playground
-          preBuild = ''
-            ${prev.preBuild or ""}
-            bash ./script/build-wasm --debug
-          '';
+            # build tree-sitter.wasm for the playground
+            preBuild = ''
+              ${prev.preBuild or ""}
+              bash ./script/build-wasm --debug
+            '';
 
-          postInstall = ''
-            ${prev.postInstall or ""}
-            PREFIX=$out make install
-          '';
-        };
+            postInstall = ''
+              ${prev.postInstall or ""}
+              PREFIX=$out make install
+            '';
+          };
       };
     };
 }

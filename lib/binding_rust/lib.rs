@@ -167,6 +167,7 @@ pub struct QueryPredicate {
 pub struct QueryMatch<'cursor, 'tree> {
     pub pattern_index: usize,
     pub captures: &'cursor [QueryCapture<'tree>],
+    pub finished: bool,
     id: u32,
     cursor: *mut ffi::TSQueryCursor,
 }
@@ -1913,6 +1914,7 @@ impl<'a, 'tree> QueryMatch<'a, 'tree> {
         QueryMatch {
             cursor,
             id: m.id,
+            finished: m.finished,
             pattern_index: m.pattern_index as usize,
             captures: if m.capture_count > 0 {
                 unsafe {

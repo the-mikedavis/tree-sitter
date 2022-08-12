@@ -48,8 +48,9 @@ pub fn query_files_at_paths(
                 let capture_name = &query.capture_names()[capture.index as usize];
                 writeln!(
                     &mut stdout,
-                    "    pattern: {:>2}, capture: {} - {}, start: {}, end: {}, text: `{}`",
+                    "    pattern: {:>2}, finished: {:>5}, capture: {} - {}, start: {}, end: {}, text: `{}`",
                     mat.pattern_index,
+                    mat.finished,
                     capture.index,
                     capture_name,
                     capture.node.start_position(),

@@ -119,6 +119,7 @@ typedef struct {
   uint16_t pattern_index;
   uint16_t capture_count;
   const TSQueryCapture *captures;
+  bool finished: 1;
 } TSQueryMatch;
 
 typedef enum {

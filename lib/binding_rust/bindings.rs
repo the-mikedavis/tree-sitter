@@ -120,6 +120,7 @@ pub struct TSQueryMatch {
     pub pattern_index: u16,
     pub capture_count: u16,
     pub captures: *const TSQueryCapture,
+    pub finished: bool,
 }
 pub const TSQueryPredicateStepType_TSQueryPredicateStepTypeDone: TSQueryPredicateStepType = 0;
 pub const TSQueryPredicateStepType_TSQueryPredicateStepTypeCapture: TSQueryPredicateStepType = 1;

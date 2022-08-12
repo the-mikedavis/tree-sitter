@@ -176,6 +176,8 @@ typedef struct {
  *    different steps in their pattern. This means that in order to obey the
  *    'longest-match' rule, this state should not be returned as a match until
  *    it is clear that there can be no other alternative match with more captures.
+ * - `finished` - a flag that indicates if the entire pattern has finished
+ *    matching.
  */
 typedef struct {
   uint32_t id;
@@ -188,6 +190,7 @@ typedef struct {
   bool has_in_progress_alternatives: 1;
   bool dead: 1;
   bool needs_parent: 1;
+  bool finished: 1;
 } QueryState;
 
 typedef Array(TSQueryCapture) CaptureList;
@@ -3265,6 +3268,7 @@ static inline bool ts_query_cursor__advance(
         if (step->depth == PATTERN_DONE_MARKER) {
           if (state->start_depth > self->depth || self->halted) {
             LOG("  finish pattern %u\n", state->pattern_index);
+            state->finished = true;
             array_push(&self->finished_states, *state);
             did_match = true;
             deleted_count++;
@@ -3668,6 +3672,7 @@ static inline bool ts_query_cursor__advance(
               LOG("  defer finishing pattern %u\n", state->pattern_index);
             } else {
               LOG("  finish pattern %u\n", state->pattern_index);
+              state->finished = true;
               array_push(&self->finished_states, *state);
               array_erase(&self->states, state - self->states.contents);
               did_match = true;
@@ -3731,6 +3736,7 @@ bool ts_query_cursor_next_match(
   );
   match->captures = captures->contents;
   match->capture_count = captures->size;
+  match->finished = true;
   capture_list_pool_release(&self->capture_list_pool, state->capture_list_id);
   array_erase(&self->finished_states, 0);
   return true;
@@ -3855,6 +3861,7 @@ bool ts_query_cursor_next_capture(
       );
       match->captures = captures->contents;
       match->capture_count = captures->size;
+      match->finished = state->finished && state->consumed_capture_count == captures->size - 1;
       *capture_index = state->consumed_capture_count;
       state->consumed_capture_count++;
       return true;

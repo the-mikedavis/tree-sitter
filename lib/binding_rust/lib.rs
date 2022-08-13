@@ -203,7 +203,6 @@ pub trait TextProvider<'a> {
 pub struct QueryCapture<'a> {
     pub node: Node<'a>,
     pub index: u32,
-    pub finished: bool,
 }
 
 /// An error that occurred when trying to assign an incompatible `Language` to a `Parser`.

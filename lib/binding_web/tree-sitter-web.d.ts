@@ -160,6 +160,7 @@ declare module 'web-tree-sitter' {
     interface QueryMatch {
       pattern: number;
       captures: QueryCapture[];
+      finished: boolean;
     }
 
     interface PredicateResult {

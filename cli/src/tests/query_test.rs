@@ -4307,6 +4307,112 @@ fn test_capture_quantifiers() {
     });
 }
 
+#[test]
+fn test_finished_matches_for_query_captures() {
+    struct Row {
+        description: &'static str,
+        language: Language,
+        pattern: &'static str,
+        source: &'static str,
+        /// `[(pattern_index, capture_index, finished)]`
+        captures: &'static [(usize, usize, bool)],
+    }
+
+    let rows = &[
+        Row {
+            description: "the last capture in a 2-capture match is finished",
+            language: get_language("rust"),
+            pattern: r#"
+                (tuple_expression "(" @rainbow ")" @rainbow)
+            "#,
+            source: r#"
+                (true, false)
+            "#,
+            captures: &[(0, 0, false), (0, 1, true)],
+        },
+        Row {
+            description: "the last capture in a 3-capture match is finished",
+            language: get_language("rust"),
+            pattern: r#"
+                (attribute_item "\#" @rainbow "[" @rainbow "]" @rainbow)
+            "#,
+            source: r#"
+                #[cfg(feature="rainbows")]
+            "#,
+            captures: &[(0, 0, false), (0, 1, false), (0, 2, true)],
+        },
+        Row {
+            description: "the last capture in a two 2-capture matches are finished",
+            language: get_language("rust"),
+            pattern: r#"
+                (tuple_expression "(" @rainbow ")" @rainbow)
+                (index_expression "[" @rainbow "]" @rainbow)
+            "#,
+            source: r#"
+                (captures[i], true)
+            "#,
+            captures: &[(0, 0, false), (1, 0, false), (1, 1, true), (0, 1, true)],
+        },
+        Row {
+            description: "the last capture in a match with repetition is finished",
+            language: get_language("rust"),
+            pattern: r#"
+                (closure_parameters "|" @rainbow (_)* "|" @rainbow)
+            "#,
+            source: r#"
+                |x| x * 2
+            "#,
+            captures: &[(0, 0, false), (0, 1, true)],
+        },
+        Row {
+            description: "the only capture in a 1-capture match is finished",
+            language: get_language("rust"),
+            pattern: r#"
+                (closure_parameters "|" @rainbow)
+            "#,
+            source: r#"
+                |x| x * 2
+            "#,
+            // Each "|" is captured in separate matches and both are finished
+            captures: &[(0, 0, true), (0, 0, true)],
+        },
+    ];
+
+    allocations::record(|| {
+        eprintln!("");
+
+        for row in rows.iter() {
+            if let Some(filter) = EXAMPLE_FILTER.as_ref() {
+                if !row.description.contains(filter.as_str()) {
+                    continue;
+                }
+            }
+            eprintln!("  query example: {:?}", row.description);
+
+            let pattern = row
+                .pattern
+                .split_ascii_whitespace()
+                .collect::<Vec<_>>()
+                .join(" ");
+
+            let mut parser = Parser::new();
+            parser.set_language(row.language).unwrap();
+            let tree = parser.parse(&row.source, None).unwrap();
+            let query = Query::new(row.language, row.pattern).unwrap();
+            let mut cursor = QueryCursor::new();
+            let actual_captures: Vec<_> = cursor
+                .captures(&query, tree.root_node(), row.source.as_bytes())
+                .map(|(mat, i)| (mat.pattern_index, i, mat.finished))
+                .collect();
+            assert_eq!(
+                actual_captures, row.captures,
+                "Description: {}, Pattern: {:?}",
+                row.description, pattern,
+            );
+        }
+    });
+}
+
 fn assert_query_matches(
     language: Language,
     query: &Query,
